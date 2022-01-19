@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "dev": "parcel watch src/index.html",
-    "build": "parcel build src/index.html"
+    "dev": "parcel watch src/index.pug",
+    "build": "parcel build src/index.pug"
   },
   "targets": {
     "default": {
@@ -13,6 +13,7 @@
     "muicss": "^0.10.3"
   },
   "devDependencies": {
+    "@parcel/transformer-pug": "^2.2.1",
     "@parcel/transformer-sass": "^2.2.1",
     "parcel": "^2.2.1"
   }
