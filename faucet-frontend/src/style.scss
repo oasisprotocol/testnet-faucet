@@ -1,0 +1,82 @@
+/* Custom MUI css */
+// https://www.muicss.com/docs/v1/css-js/customization
+@import '../node_modules/muicss/lib/sass/mui/colors';
+
+$oasis-primary: #0092F6;
+$mui-primary-color: $oasis-primary;
+
+$mui-panel-padding: 0px;
+$mui-panel-border-radius: 16px;
+$mui-btn-border-radius: 4px;
+$mui-btn-height: 50px;
+
+@import '../node_modules/muicss/lib/sass/mui';
+
+.mui-textfield--float-label {
+  > input,
+  > textarea {
+    &:required:valid {
+      @extend .mui--is-not-empty;
+    }
+  }
+}
+
+.mui-btn {
+  font-weight: bold;
+  width: 100%;
+}
+
+
+/* Layout */
+body {
+  min-height: 100vh;
+}
+.page {
+  display: flex;
+  flex-direction: column;
+}
+.align-card {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .card {
+    width: 100%;
+    max-width: 370px;
+    margin-top: 20px;
+
+    .card-image {
+      border-top-left-radius: inherit;
+      border-top-right-radius: inherit;
+      height: 130px;
+    }
+    .card-content {
+      padding: 35px;
+
+      .title {
+        text-align: center;
+      }
+    }
+  }
+}
+
+.g-recaptcha {
+  margin-top: 40px;
+  margin-bottom: 30px;
+}
+
+
+/* Misc */
+.card-image {
+  background:
+    url('./public/oasis-foundation.svg') center / auto 70px no-repeat,
+    url('./public/background.svg') top left / cover no-repeat,
+    $oasis-primary;
+}
+.title {
+  @extend .mui--text-title;
+  color: $oasis-primary;
+  font-weight: bold;
+}
+

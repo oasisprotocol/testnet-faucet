@@ -2,13 +2,42 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="./public/favicon.ico" />
+    <title>Oasis Network Testnet Faucet</title>
+    <meta property="og:title" content="Oasis Network Testnet Faucet" />
+    <meta name="description" content="Get test tokens for Oasis Network.">
+    <meta property="og:description" content="Get test tokens for Oasis Network." />
+    <link rel="stylesheet" href="./style.css" />
+    <script src="https://www.google.com/recaptcha/api.js"></script>
   </head>
-  <body>
-    <form action="/api/v1/fund" method="POST">
-      <label for="account">Address here</label>
-      <input type="text" name="account" id="account" required>
-      <input type="hidden" name="amount" value="1">
-      <input type="submit" value="Request Test Tokens">
-    </form>
+  <body class="page">
+    <main class="align-card">
+      <section class="mui-panel card">
+        <div class="card-image" role="img" aria-label="Oasis Foundation logo"></div>
+        <div class="card-content">
+          <h1 class="title">Oasis Network Testnet Faucet</h1>
+
+          <p class="mui--text-center mui--text-dark-secondary">
+            Drops are limited to <strong>10 TEST tokens</strong>
+          </p>
+
+          <form action="/api/v1/fund" method="POST">
+            <div class="mui-textfield mui-textfield--float-label">
+              <input type="text" name="account" id="account" required>
+              <label for="account">Address here</label>
+            </div>
+
+            <input type="hidden" name="amount" value="1">
+
+            <!-- Dev only sitekey -->
+            <div class="g-recaptcha" data-sitekey="asdh"></div>
+
+            <input class="mui-btn mui-btn--primary" type="submit" value="Request Test Tokens">
+          </form>
+        </div>
+      </section>
+    </main>
   </body>
 </html>
