@@ -38,6 +38,9 @@ html(lang="en")
 
             button#request-form-submit.mui-btn.mui-btn--primary(type="submit")
               | Request Test Tokens
+              |
+              span.spinner-when-disabled
+                div.spinner
 
           form#response-display(action="/" method="GET" style={display: 'none'})
             p#response-display-text
