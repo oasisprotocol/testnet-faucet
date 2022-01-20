@@ -12,7 +12,8 @@ html(lang="en")
     meta(property="og:description" content=process.env.DOCUMENT_DESCRIPTION)
 
     link(rel="stylesheet" href="./style.scss")
-    script(src="https://www.google.com/recaptcha/api.js")
+    script(src="https://www.google.com/recaptcha/api.js" defer)
+    script(src="./main.js" defer)
 
   body.page
     main.align-card
@@ -35,4 +36,10 @@ html(lang="en")
 
             div(class="g-recaptcha" data-sitekey=process.env.CAPTCHA_SITE_KEY)
 
-            input.mui-btn.mui-btn--primary(type="submit" value="Request Test Tokens")
+            button#request-form-submit.mui-btn.mui-btn--primary(type="submit")
+              | Request Test Tokens
+
+          form#response-display(action="/" method="GET" style={display: 'none'})
+            p#response-display-text
+            button.mui-btn.mui-btn--primary(type="submit")
+              | Start again
