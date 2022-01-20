@@ -5,10 +5,13 @@ function showResponseStatus(status) {
   document.querySelector('#response-display').style.display = 'block';
   document.querySelector('#response-display-text').textContent = status;
 }
+function showLoading(bool) {
+  document.querySelector('#request-form-submit').disabled = bool;
+}
 
 document.querySelector('#request-form').addEventListener('submit', (event) => {
   try {
-    document.querySelector('#request-form-submit').disabled = true;
+    showLoading(true);
 
     const form =
       /** @type {HTMLFormElement} */
@@ -24,10 +27,10 @@ document.querySelector('#request-form').addEventListener('submit', (event) => {
     })
       .then(response => response.json())
       .then((responseJson) => {
-        document.querySelector('#request-form-submit').disabled = false;
+        showLoading(false);
         showResponseStatus(responseJson.result);
       }, (error) => {
-        document.querySelector('#request-form-submit').disabled = false;
+        showLoading(false);
         showResponseStatus(error);
       });
 
@@ -35,7 +38,7 @@ document.querySelector('#request-form').addEventListener('submit', (event) => {
     event.preventDefault();
   } catch (error) {
     // Allow native form to POST instead.
-    document.querySelector('#request-form-submit').disabled = false;
+    showLoading(false);
     console.error(error);
   }
 });
