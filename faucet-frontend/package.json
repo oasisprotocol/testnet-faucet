@@ -10,6 +10,7 @@
       "distDir": "./dist"
     }
   },
+  "browserslist": "> 0.5%, last 2 versions, not dead",
   "dependencies": {
     "muicss": "^0.10.3"
   },
