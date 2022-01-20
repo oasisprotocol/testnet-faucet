@@ -21,10 +21,12 @@ html(lang="en")
         div.card-content
           h1.title #{process.env.CARD_TITLE}
 
-          p.mui--text-center.mui--text-dark-secondary.
-            Drops are limited to <strong>10 TEST tokens</strong>
+          form#request-form(action="/api/v1/fund" method="POST")
+            p.mui--text-center.mui--text-dark-secondary
+              | Drops are limited to
+              |
+              <strong>#{process.env.DROP_LIMIT_TEXT}</strong>
 
-          form(action="/api/v1/fund" method="POST")
             div.mui-textfield.mui-textfield--float-label
               input#account(type="text" name="account" required)
               label(for="account") Address here
