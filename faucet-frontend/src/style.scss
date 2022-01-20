@@ -74,9 +74,14 @@ body {
     url('./public/background.svg') top left / cover no-repeat,
     $oasis-primary;
 }
+
 .title {
   @extend .mui--text-title;
   color: $oasis-primary;
   font-weight: bold;
+}
+
+#response-display-text:first-letter {
+  text-transform: capitalize;
 }
 
