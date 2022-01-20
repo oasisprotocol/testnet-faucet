@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "dev": "parcel watch src/index.pug",
-    "build": "parcel build src/index.pug"
+    "dev": "rm -rf .parcel-cache && parcel watch src/index.pug",
+    "build": "rm -rf .parcel-cache && parcel build src/index.pug"
   },
   "targets": {
     "default": {
