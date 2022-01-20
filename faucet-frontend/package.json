@@ -6,7 +6,7 @@
   "targets": {
     "default": {
       "optimize": false,
-      "distDir": "../faucet-backend/example-webroot"
+      "distDir": "./dist"
     }
   },
   "dependencies": {
