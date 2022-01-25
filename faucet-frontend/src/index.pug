@@ -28,6 +28,12 @@ html(lang="en")
               |
               <strong>#{process.env.DROP_LIMIT_TEXT}</strong>
 
+            div.mui-select
+              select#paratime(name="paratime")
+                option(value="") Consensus
+                option(value="emerald") Emerald
+                option(value="cipher") Cipher
+
             div.mui-textfield.mui-textfield--float-label
               input#account(type="text" name="account" required)
               label(for="account") Address here
