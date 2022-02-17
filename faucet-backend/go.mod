@@ -42,7 +42,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20210716083614-f38f8e8b0b84 // indirect
 	github.com/oasisprotocol/deoxysii v0.0.0-20200527154044-851aec403956 // indirect
-	github.com/oasisprotocol/oasis-core/go v0.2103.6 // indirect
+	github.com/oasisprotocol/oasis-core/go v0.2103.6
 	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.1.1-0.20220106135233-da50299a696f
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
