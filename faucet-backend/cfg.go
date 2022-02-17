@@ -15,6 +15,9 @@ type Config struct {
 	// and log files will live.
 	DataDir string `toml:"data_dir"`
 
+	// DisableLogToFile disables logging to a file
+	DisableLogToFile bool `toml:"disable_log_to_file"`
+
 	// TargetAllowance is the target per-paratime allowance in base units.
 	TargetAllowance quantity.Quantity `toml:"target_allowance"`
 	// MaxConsensusFundAmount is the maximum amount of tokens funded to
@@ -73,6 +76,10 @@ func LoadConfig(path string) (*Config, error) {
 				return nil, fmt.Errorf("cfg: max paratime fund amount is not a number")
 			}
 		}
+	}
+	envRecaptchaSharedSecret := os.Getenv("CAPTCHA_SHARED_SECRET")
+	if cfg.RecaptchaSharedSecret == "" && envRecaptchaSharedSecret != "" {
+		cfg.RecaptchaSharedSecret = envRecaptchaSharedSecret
 	}
 
 	return &cfg, nil
