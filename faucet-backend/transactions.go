@@ -18,7 +18,12 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 )
 
-const requestTimeout = 15 * time.Second // TODO: Make configurable.
+const requestTimeout = 60 * time.Second // TODO: Make configurable.
+
+type MetaTxCompletionWatcher struct {
+	Context  context.Context
+	ResultCh <-chan *consensusaccounts.DepositEvent
+}
 
 // One would think that the SDK would have nice helpers for doing this,
 // since it is a common operation.  Instead pretend that we are DeFi DEX
@@ -86,7 +91,7 @@ func (svc *Service) SignAndSubmitMetaTx(
 	conn connection.Connection,
 	pt *config.ParaTime,
 	tx *types.Transaction,
-) error {
+) (*MetaTxCompletionWatcher, error) {
 	// Query the current account nonce.
 	nonce, err := conn.Runtime(pt).Accounts.Nonce(
 		ctx,
@@ -95,7 +100,7 @@ func (svc *Service) SignAndSubmitMetaTx(
 	)
 	if err != nil {
 		svc.log.Printf("tx/meta: failed to query nonce: %v", err)
-		return fmt.Errorf("failed to query nonce")
+		return nil, fmt.Errorf("failed to query nonce")
 	}
 
 	// Estimate gas.
@@ -110,7 +115,7 @@ func (svc *Service) SignAndSubmitMetaTx(
 	)
 	if err != nil {
 		svc.log.Printf("tx/meta: failed to estimate gas: %v", err)
-		return fmt.Errorf("failed to estimate gas")
+		return nil, fmt.Errorf("failed to estimate gas")
 	}
 
 	// Sign the transaction.
@@ -118,20 +123,26 @@ func (svc *Service) SignAndSubmitMetaTx(
 	ts := tx.PrepareForSigning()
 	if err := ts.AppendSign(sigCtx, ed25519.WrapSigner(svc.signer)); err != nil {
 		svc.log.Printf("tx/meta: failed to sign transaction: %v", err)
-		return fmt.Errorf("failed to sign transaction")
+		return nil, fmt.Errorf("failed to sign transaction")
 	}
 
 	// WARNING: This is specialized to deposit transactions because
 	// that is all we use this for.  This would have been a fully
 	// generic function if it wasn't for this event nonsense.
+
+	var submitOk bool
 	decoder := conn.Runtime(pt).ConsensusAccounts
 	watchCtx, cancelFn := context.WithTimeout(ctx, requestTimeout)
-	defer cancelFn()
+	defer func() {
+		if !submitOk {
+			cancelFn()
+		}
+	}()
 
 	ch, err := conn.Runtime(pt).WatchEvents(watchCtx, []client.EventDecoder{decoder}, false)
 	if err != nil {
 		svc.log.Printf("tx/meta: failed to watch events: %v", err)
-		return fmt.Errorf("failed to watch events")
+		return nil, fmt.Errorf("failed to watch events")
 	}
 
 	resultCh := make(chan *consensusaccounts.DepositEvent)
@@ -168,7 +179,7 @@ func (svc *Service) SignAndSubmitMetaTx(
 	meta, err := conn.Runtime(pt).SubmitTxMeta(ctx, signedTx)
 	if err != nil {
 		svc.log.Printf("tx/meta: failed to submit transaction: %v", err)
-		return fmt.Errorf("failed to submit meta transaction")
+		return nil, fmt.Errorf("failed to submit meta transaction")
 	}
 	if meta.CheckTxError != nil {
 		svc.log.Printf("tx/meta: transaction check failed with error: module: %s code: %d message: %s",
@@ -176,22 +187,14 @@ func (svc *Service) SignAndSubmitMetaTx(
 			meta.CheckTxError.Code,
 			meta.CheckTxError.Message,
 		)
-		return fmt.Errorf("failed to check meta transaction")
+		return nil, fmt.Errorf("failed to check meta transaction")
 	}
 
-	// WARNING: Likewise this is specialized to deposit transactions.
-	ev := <-resultCh
-	if ev == nil {
-		svc.log.Printf("tx/meta: failed to wait for event: %v", watchCtx.Err())
-		return fmt.Errorf("failed to wait for event")
+	watcher := &MetaTxCompletionWatcher{
+		Context:  watchCtx,
+		ResultCh: resultCh,
 	}
-	if !ev.IsSuccess() {
-		svc.log.Printf("tx/meta: tx failed with error: module: %s code: %d",
-			ev.Error.Module,
-			ev.Error.Code,
-		)
-		return fmt.Errorf("transaction failed")
-	}
+	submitOk = true
 
-	return nil
+	return watcher, nil
 }
