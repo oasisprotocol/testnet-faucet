@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
@@ -89,7 +90,12 @@ func (svc *Service) FundConsensusRequest(ctx context.Context, conn connection.Co
 }
 
 func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Connection, req *FundRequest) {
-	defer close(req.ResponseCh)
+	var submitOk bool
+	defer func() {
+		if !submitOk {
+			close(req.ResponseCh)
+		}
+	}()
 
 	// Just asssume that there is sufficient allowance, and that the periodic
 	// refill adequately handles keeping the allowance topped off.
@@ -98,13 +104,34 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 		To:     req.Account,
 		Amount: *req.ParaTimeAmount,
 	})
-	if err := svc.SignAndSubmitMetaTx(ctx, conn, req.ParaTime, tx); err != nil {
+	watcher, err := svc.SignAndSubmitMetaTx(ctx, conn, req.ParaTime, tx)
+	if err != nil {
 		// Logging is handled by the helper.
 		req.ResponseCh <- err
 		return
 	}
 
-	req.ResponseCh <- nil
+	submitOk = true
+	go func() {
+		defer close(req.ResponseCh)
+	
+		ev := <-watcher.ResultCh
+		if ev == nil {
+			svc.log.Printf("tx/meta: failed to wait for event: %v", watcher.Context.Err())
+			req.ResponseCh <- fmt.Errorf("failed to wait for event (timeout)")
+			return
+		}
+
+		if !ev.IsSuccess() {
+			svc.log.Printf("tx/meta: tx failed with error: module: %s code: %d",
+				ev.Error.Module,
+				ev.Error.Code,
+			)
+			req.ResponseCh <- fmt.Errorf("transaction failed")
+			return
+		}
+		req.ResponseCh <- nil
+	}()
 }
 
 func (svc *Service) RefillAllowances(ctx context.Context, conn connection.Connection) {
