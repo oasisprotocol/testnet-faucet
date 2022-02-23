@@ -134,10 +134,10 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var err error
-	fundReq := &FundRequest{
-		ResponseCh: make(chan error),
-	}
+	var (
+		err     error
+		fundReq FundRequest
+	)
 
 	// ParaTime
 	paraTimeStr := strings.TrimSpace(req.Form.Get(queryParaTime))
@@ -271,7 +271,7 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 
 	// Attempt to fund the address.
 	select {
-	case svc.fundRequestCh <- fundReq:
+	case svc.fundRequestCh <- &fundReq:
 	default:
 		// Queue backlog full, fail early.
 		svc.ClearAddress(fundReq.Account)
@@ -282,20 +282,10 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Return the status.
-	if err = <-fundReq.ResponseCh; err != nil {
-		svc.log.Printf("frontend: failed to fund request ([%v]%v: %v): %v", paraTimeStr, accountStr, amountStr, err)
-		writeResult(
-			http.StatusInternalServerError,
-			fmt.Errorf("failed to fund account: %w", err),
-		)
-		return
-	}
-
 	svc.log.Printf("frontend: request enqueued: [%v]%v: %v TEST", paraTimeStr, accountStr, amountStr)
 
 	writeResult(
 		http.StatusOK,
-		fmt.Errorf("funding successful"),
+		fmt.Errorf("funding request submitted"),
 	)
 }
