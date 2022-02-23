@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
@@ -21,8 +20,6 @@ type FundRequest struct {
 
 	ConsensusAmount *types.Quantity
 	ParaTimeAmount  *types.BaseUnits
-
-	ResponseCh chan error
 }
 
 func (svc *Service) BankWorker() {
@@ -73,10 +70,7 @@ func (svc *Service) BankWorker() {
 }
 
 func (svc *Service) FundConsensusRequest(ctx context.Context, conn connection.Connection, req *FundRequest) {
-	defer func() {
-		svc.ClearAddress(req.Account)
-		close(req.ResponseCh)
-	}()
+	defer svc.ClearAddress(req.Account)
 
 	xfer := staking.Transfer{
 		To:     req.Account.ConsensusAddress(),
@@ -84,12 +78,18 @@ func (svc *Service) FundConsensusRequest(ctx context.Context, conn connection.Co
 	}
 	tx := staking.NewTransferTx(0, new(consensusTx.Fee), &xfer)
 	if err := svc.SignAndSubmitConsensusTx(ctx, conn, tx); err != nil {
-		// Logging is handled by the helper.
-		req.ResponseCh <- err
+		svc.log.Printf("bank/consesus: failed to submit tx (%v: %v): %v",
+			xfer.To.String(),
+			xfer.Amount.String(),
+			err,
+		)
 		return
 	}
 
-	req.ResponseCh <- nil
+	svc.log.Printf("bank/consensus: request successful: %v: %v TEST",
+		xfer.To.String(),
+		xfer.Amount.String(),
+	)
 }
 
 func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Connection, req *FundRequest) {
@@ -97,21 +97,24 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 	defer func() {
 		if !submitOk {
 			svc.ClearAddress(req.Account)
-			close(req.ResponseCh)
 		}
 	}()
 
 	// Just asssume that there is sufficient allowance, and that the periodic
 	// refill adequately handles keeping the allowance topped off.
 
-	tx := consensusaccounts.NewDepositTx(nil, &consensusaccounts.Deposit{
+	depositBody := &consensusaccounts.Deposit{
 		To:     req.Account,
 		Amount: *req.ParaTimeAmount,
-	})
+	}
+	tx := consensusaccounts.NewDepositTx(nil, depositBody)
 	watcher, err := svc.SignAndSubmitMetaTx(ctx, conn, req.ParaTime, tx)
 	if err != nil {
-		// Logging is handled by the helper.
-		req.ResponseCh <- err
+		svc.log.Printf("bank/paratime: failed to submit tx (%v: %v): %v",
+			depositBody.To.String(),
+			depositBody.Amount.String(),
+			err,
+		)
 		return
 	}
 
@@ -119,25 +122,26 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 	go func() {
 		defer func() {
 			svc.ClearAddress(req.Account)
-			close(req.ResponseCh)
 		}()
 
 		ev := <-watcher.ResultCh
 		if ev == nil {
-			svc.log.Printf("tx/meta: failed to wait for event: %v", watcher.Context.Err())
-			req.ResponseCh <- fmt.Errorf("failed to wait for event (timeout)")
+			svc.log.Printf("bank/paratime: failed to wait for event: %v", watcher.Context.Err())
 			return
 		}
 
 		if !ev.IsSuccess() {
-			svc.log.Printf("tx/meta: tx failed with error: module: %s code: %d",
+			svc.log.Printf("bank/paratime: tx failed with error: module: %s code: %d",
 				ev.Error.Module,
 				ev.Error.Code,
 			)
-			req.ResponseCh <- fmt.Errorf("transaction failed")
 			return
 		}
-		req.ResponseCh <- nil
+
+		svc.log.Printf("bank/paratime: request successful: %v: %v TEST",
+			depositBody.To.String(),
+			depositBody.Amount.String(),
+		)
 	}()
 }
 
