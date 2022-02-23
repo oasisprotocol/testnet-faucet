@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	fileSigner "github.com/oasisprotocol/oasis-core/go/common/crypto/signature/signers/file"
@@ -39,6 +40,9 @@ type Service struct {
 	doneCh  chan struct{}
 
 	fundRequestCh chan *FundRequest
+
+	dedupMap  map[string]bool
+	dedupLock sync.Mutex
 }
 
 func NewService(cfg *Config) (*Service, error) {
@@ -77,6 +81,7 @@ func NewService(cfg *Config) (*Service, error) {
 		quitCh:        make(chan struct{}),
 		doneCh:        make(chan struct{}),
 		fundRequestCh: make(chan *FundRequest, 10),
+		dedupMap:      make(map[string]bool),
 	}, nil
 }
 

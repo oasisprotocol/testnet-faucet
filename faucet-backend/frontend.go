@@ -24,6 +24,24 @@ const (
 	prefixEth   = "0x"
 )
 
+func (svc *Service) TestAndSetAddress(addr *types.Address) bool {
+	svc.dedupLock.Lock()
+	defer svc.dedupLock.Unlock()
+
+	addrStr := addr.String()
+
+	ret := svc.dedupMap[addrStr]
+	svc.dedupMap[addrStr] = true
+	return ret
+}
+
+func (svc *Service) ClearAddress(addr *types.Address) {
+	svc.dedupLock.Lock()
+	defer svc.dedupLock.Unlock()
+
+	svc.dedupMap[addr.String()] = false
+}
+
 func (svc *Service) FrontendWorker() {
 	defer func() {
 		close(svc.doneCh)
@@ -241,11 +259,22 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	// Ensure the address does not have a request in-flight already.
+	if svc.TestAndSetAddress(fundReq.Account) {
+		// User is being a greedy asshole, fail.
+		writeResult(
+			http.StatusForbidden,
+			fmt.Errorf("funding request already pending, try again later"),
+		)
+		return
+	}
+
 	// Attempt to fund the address.
 	select {
 	case svc.fundRequestCh <- fundReq:
 	default:
 		// Queue backlog full, fail early.
+		svc.ClearAddress(fundReq.Account)
 		writeResult(
 			http.StatusInternalServerError,
 			fmt.Errorf("temporary failure, try again later"),
@@ -263,7 +292,7 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	svc.log.Printf("frontend: request funded: [%v]%v: %v TEST", paraTimeStr, accountStr, amountStr)
+	svc.log.Printf("frontend: request enqueued: [%v]%v: %v TEST", paraTimeStr, accountStr, amountStr)
 
 	writeResult(
 		http.StatusOK,
