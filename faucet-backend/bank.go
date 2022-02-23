@@ -73,7 +73,10 @@ func (svc *Service) BankWorker() {
 }
 
 func (svc *Service) FundConsensusRequest(ctx context.Context, conn connection.Connection, req *FundRequest) {
-	defer close(req.ResponseCh)
+	defer func() {
+		svc.ClearAddress(req.Account)
+		close(req.ResponseCh)
+	}()
 
 	xfer := staking.Transfer{
 		To:     req.Account.ConsensusAddress(),
@@ -93,6 +96,7 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 	var submitOk bool
 	defer func() {
 		if !submitOk {
+			svc.ClearAddress(req.Account)
 			close(req.ResponseCh)
 		}
 	}()
@@ -113,8 +117,11 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 
 	submitOk = true
 	go func() {
-		defer close(req.ResponseCh)
-	
+		defer func() {
+			svc.ClearAddress(req.Account)
+			close(req.ResponseCh)
+		}()
+
 		ev := <-watcher.ResultCh
 		if ev == nil {
 			svc.log.Printf("tx/meta: failed to wait for event: %v", watcher.Context.Err())
