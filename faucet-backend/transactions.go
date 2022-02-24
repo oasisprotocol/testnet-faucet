@@ -154,11 +154,20 @@ func (svc *Service) SignAndSubmitMetaTx(
 		expectedNonce := nonce
 
 		for {
-			var bev *client.BlockEvents
+			var (
+				bev *client.BlockEvents
+				ok  bool
+			)
 			select {
 			case <-watchCtx.Done():
+				svc.log.Printf("tx/meta: context canceled, request timed out")
 				return
-			case bev = <-ch:
+			case bev, ok = <-ch:
+				if !ok {
+					// If rc.GetEvents fails, the channel just gets closed.
+					svc.log.Printf("tx/meta: event channel closed unexpectedly")
+					return
+				}
 			}
 			for _, ev := range bev.Events {
 				ce, ok := ev.(*consensusaccounts.Event)

@@ -139,9 +139,11 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		fundReq FundRequest
 	)
 
-	// ParaTime
+	// ParaTime/Account
 	paraTimeStr := strings.TrimSpace(req.Form.Get(queryParaTime))
+	accountStr := strings.TrimSpace(req.Form.Get(queryAccount))
 	if paraTimeStr != "" {
+		// Paratime account
 		fundReq.ParaTime = svc.network.ParaTimes.All[paraTimeStr]
 		if fundReq.ParaTime == nil {
 			svc.log.Printf("frontend: invalid paratime: '%v'", paraTimeStr)
@@ -151,24 +153,20 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 			)
 			return
 		}
-	}
-
-	// Account
-	accountStr := strings.TrimSpace(req.Form.Get(queryAccount))
-	switch {
-	case fundReq.ParaTime == nil && !strings.HasPrefix(accountStr, prefixOasis):
+		if !strings.HasPrefix(accountStr, prefixEth) {
+			svc.log.Printf("frontend: account not an ethereum address: '%v'", accountStr)
+			writeResult(
+				http.StatusInternalServerError,
+				fmt.Errorf("failed to fund account: invalid account: not an ethereum address"),
+			)
+			return
+		}
+	} else if !strings.HasPrefix(accountStr, prefixOasis) {
+		// Consensus account
 		svc.log.Printf("frontend: account not an oasis address: '%v'", accountStr)
 		writeResult(
 			http.StatusInternalServerError,
 			fmt.Errorf("failed to fund account: invalid account: not an oasis address"),
-		)
-		return
-	case fundReq.ParaTime != nil && !strings.HasPrefix(accountStr, prefixEth):
-		// XXX: Does cipher use ethereum style `0x` prefixes?
-		svc.log.Printf("frontend: account not an ethereum address: '%v'", accountStr)
-		writeResult(
-			http.StatusInternalServerError,
-			fmt.Errorf("failed to fund account: invalid account: not an ethereum address"),
 		)
 		return
 	}
