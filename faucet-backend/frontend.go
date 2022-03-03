@@ -24,6 +24,24 @@ const (
 	prefixEth   = "0x"
 )
 
+func (svc *Service) TestAndSetAddress(addr *types.Address) bool {
+	svc.dedupLock.Lock()
+	defer svc.dedupLock.Unlock()
+
+	addrStr := addr.String()
+
+	ret := svc.dedupMap[addrStr]
+	svc.dedupMap[addrStr] = true
+	return ret
+}
+
+func (svc *Service) ClearAddress(addr *types.Address) {
+	svc.dedupLock.Lock()
+	defer svc.dedupLock.Unlock()
+
+	svc.dedupMap[addr.String()] = false
+}
+
 func (svc *Service) FrontendWorker() {
 	defer func() {
 		close(svc.doneCh)
@@ -116,14 +134,16 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var err error
-	fundReq := &FundRequest{
-		ResponseCh: make(chan error),
-	}
+	var (
+		err     error
+		fundReq FundRequest
+	)
 
-	// ParaTime
+	// ParaTime/Account
 	paraTimeStr := strings.TrimSpace(req.Form.Get(queryParaTime))
+	accountStr := strings.TrimSpace(req.Form.Get(queryAccount))
 	if paraTimeStr != "" {
+		// Paratime account
 		fundReq.ParaTime = svc.network.ParaTimes.All[paraTimeStr]
 		if fundReq.ParaTime == nil {
 			svc.log.Printf("frontend: invalid paratime: '%v'", paraTimeStr)
@@ -133,24 +153,20 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 			)
 			return
 		}
-	}
-
-	// Account
-	accountStr := strings.TrimSpace(req.Form.Get(queryAccount))
-	switch {
-	case fundReq.ParaTime == nil && !strings.HasPrefix(accountStr, prefixOasis):
+		if !strings.HasPrefix(accountStr, prefixEth) {
+			svc.log.Printf("frontend: account not an ethereum address: '%v'", accountStr)
+			writeResult(
+				http.StatusInternalServerError,
+				fmt.Errorf("failed to fund account: invalid account: not an ethereum address"),
+			)
+			return
+		}
+	} else if !strings.HasPrefix(accountStr, prefixOasis) {
+		// Consensus account
 		svc.log.Printf("frontend: account not an oasis address: '%v'", accountStr)
 		writeResult(
 			http.StatusInternalServerError,
 			fmt.Errorf("failed to fund account: invalid account: not an oasis address"),
-		)
-		return
-	case fundReq.ParaTime != nil && !strings.HasPrefix(accountStr, prefixEth):
-		// XXX: Does cipher use ethereum style `0x` prefixes?
-		svc.log.Printf("frontend: account not an ethereum address: '%v'", accountStr)
-		writeResult(
-			http.StatusInternalServerError,
-			fmt.Errorf("failed to fund account: invalid account: not an ethereum address"),
 		)
 		return
 	}
@@ -241,11 +257,22 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	// Ensure the address does not have a request in-flight already.
+	if svc.TestAndSetAddress(fundReq.Account) {
+		// User is being a greedy asshole, fail.
+		writeResult(
+			http.StatusForbidden,
+			fmt.Errorf("funding request already pending, try again later"),
+		)
+		return
+	}
+
 	// Attempt to fund the address.
 	select {
-	case svc.fundRequestCh <- fundReq:
+	case svc.fundRequestCh <- &fundReq:
 	default:
 		// Queue backlog full, fail early.
+		svc.ClearAddress(fundReq.Account)
 		writeResult(
 			http.StatusInternalServerError,
 			fmt.Errorf("temporary failure, try again later"),
@@ -253,20 +280,10 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Return the status.
-	if err = <-fundReq.ResponseCh; err != nil {
-		svc.log.Printf("frontend: failed to fund request ([%v]%v: %v): %v", paraTimeStr, accountStr, amountStr, err)
-		writeResult(
-			http.StatusInternalServerError,
-			fmt.Errorf("failed to fund account: %w", err),
-		)
-		return
-	}
-
-	svc.log.Printf("frontend: request funded: [%v]%v: %v TEST", paraTimeStr, accountStr, amountStr)
+	svc.log.Printf("frontend: request enqueued: [%v]%v: %v TEST", paraTimeStr, accountStr, amountStr)
 
 	writeResult(
 		http.StatusOK,
-		fmt.Errorf("funding successful"),
+		fmt.Errorf("funding request submitted"),
 	)
 }
