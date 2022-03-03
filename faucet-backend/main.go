@@ -51,14 +51,23 @@ func NewService(cfg *Config) (*Service, error) {
 		return nil, fmt.Errorf("main: failed to create data dir: %w", err)
 	}
 
-	// Initialize logging.
-	f, err := os.OpenFile(
-		filepath.Join(cfg.DataDir, "faucet-backend.log"),
-		os.O_APPEND|os.O_CREATE|os.O_RDWR,
-		0o600,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("main: failed to open log file: %w", err)
+	var logWriter io.Writer
+
+	// By default we log to a file, but some environments like docker already
+	// capture all logs from stdout/stderr.
+	if cfg.DisableLogToFile {
+		logWriter = os.Stdout
+	} else {
+		// Initialize logging.
+		f, err := os.OpenFile(
+			filepath.Join(cfg.DataDir, "faucet-backend.log"),
+			os.O_APPEND|os.O_CREATE|os.O_RDWR,
+			0o600,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("main: failed to open log file: %w", err)
+		}
+		logWriter = io.MultiWriter(os.Stdout, f)
 	}
 
 	// Load the signer.
@@ -76,7 +85,7 @@ func NewService(cfg *Config) (*Service, error) {
 		network:       config.DefaultNetworks.All["testnet"], // Yes, this is hardcoded.
 		address:       staking.NewAddress(signer.Public()),
 		signer:        signer,
-		log:           log.New(io.MultiWriter(os.Stdout, f), "", log.LstdFlags),
+		log:           log.New(logWriter, "", log.LstdFlags),
 		readyCh:       make(chan struct{}),
 		quitCh:        make(chan struct{}),
 		doneCh:        make(chan struct{}),

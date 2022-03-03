@@ -1,0 +1,17 @@
+FROM golang:1.17 as backend_builder
+
+WORKDIR /usr/src/app
+
+COPY faucet-backend/ /usr/src/app
+
+RUN go build .
+
+FROM node:16
+
+COPY faucet-frontend/ /oasis/frontend
+RUN cd /oasis/frontend && \
+    yarn
+
+COPY deploy/frontend-serve.sh /oasis/bin/frontend-serve.sh
+COPY --from=backend_builder /usr/src/app/faucet-backend /oasis/bin/faucet-backend
+
