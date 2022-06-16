@@ -19,10 +19,21 @@ const (
 	queryAccount           = "account"
 	queryAmount            = "amount"
 	queryRecaptchaResponse = "g-recaptcha-response"
-
-	prefixOasis = "oasis"
-	prefixEth   = "0x"
 )
+
+var accountPrefixes = map[string]string{
+	"":        "oasis",
+	"emerald": "0x",
+	"cipher":  "oasis",
+}
+
+func expectedAccountPrefix(paraTimeStr string) (string, error) {
+	prefix, ok := accountPrefixes[strings.ToLower(paraTimeStr)]
+	if !ok {
+		return "", fmt.Errorf("frontend: unknown account type")
+	}
+	return prefix, nil
+}
 
 func (svc *Service) TestAndSetAddress(addr *types.Address) bool {
 	svc.dedupLock.Lock()
@@ -142,6 +153,15 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 	// ParaTime/Account
 	paraTimeStr := strings.TrimSpace(req.Form.Get(queryParaTime))
 	accountStr := strings.TrimSpace(req.Form.Get(queryAccount))
+	prefixStr, err := expectedAccountPrefix(paraTimeStr)
+	if err != nil {
+		svc.log.Printf("frontend: invalid paratime: '%v'", paraTimeStr)
+		writeResult(
+			http.StatusInternalServerError,
+			fmt.Errorf("failed to fund account: invalid paratime: '%v'", paraTimeStr),
+		)
+		return
+	}
 	if paraTimeStr != "" {
 		// Paratime account
 		fundReq.ParaTime = svc.network.ParaTimes.All[paraTimeStr]
@@ -153,15 +173,15 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 			)
 			return
 		}
-		if !strings.HasPrefix(accountStr, prefixEth) {
-			svc.log.Printf("frontend: account not an ethereum address: '%v'", accountStr)
+		if !strings.HasPrefix(accountStr, prefixStr) {
+			svc.log.Printf("frontend: account not a paratime address: '%v'", accountStr)
 			writeResult(
 				http.StatusInternalServerError,
-				fmt.Errorf("failed to fund account: invalid account: not an ethereum address"),
+				fmt.Errorf("failed to fund account: invalid account: not a paratime address"),
 			)
 			return
 		}
-	} else if !strings.HasPrefix(accountStr, prefixOasis) {
+	} else if !strings.HasPrefix(accountStr, prefixStr) {
 		// Consensus account
 		svc.log.Printf("frontend: account not an oasis address: '%v'", accountStr)
 		writeResult(
