@@ -72,6 +72,9 @@ func (svc *Service) BankWorker() {
 func (svc *Service) FundConsensusRequest(ctx context.Context, conn connection.Connection, req *FundRequest) {
 	defer svc.ClearAddress(req.Account)
 
+	var elapsed time.Duration
+	start := time.Now()
+
 	xfer := staking.Transfer{
 		To:     req.Account.ConsensusAddress(),
 		Amount: *req.ConsensusAmount,
@@ -83,6 +86,7 @@ func (svc *Service) FundConsensusRequest(ctx context.Context, conn connection.Co
 			xfer.Amount.String(),
 			err,
 		)
+		svc.metrics.Requests.WithLabelValues("consensus", "failure").Inc()
 		return
 	}
 
@@ -90,6 +94,10 @@ func (svc *Service) FundConsensusRequest(ctx context.Context, conn connection.Co
 		xfer.To.String(),
 		xfer.Amount.String(),
 	)
+
+	elapsed = time.Since(start)
+	svc.metrics.RequestLatencies.WithLabelValues("consensus").Observe(elapsed.Seconds())
+	svc.metrics.Requests.WithLabelValues("consensus", "success").Inc()
 }
 
 func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Connection, req *FundRequest) {
@@ -99,6 +107,15 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 			svc.ClearAddress(req.Account)
 		}
 	}()
+
+	var elapsed time.Duration
+	start := time.Now()
+	var reqParatimeName string
+	for ptName, pt := range svc.network.ParaTimes.All {
+		if req.ParaTime.ID == pt.ID {
+			reqParatimeName = ptName
+		}
+	}
 
 	// Just asssume that there is sufficient allowance, and that the periodic
 	// refill adequately handles keeping the allowance topped off.
@@ -115,6 +132,7 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 			depositBody.Amount.String(),
 			err,
 		)
+		svc.metrics.Requests.WithLabelValues(reqParatimeName, "failure").Inc()
 		return
 	}
 
@@ -127,6 +145,7 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 		ev := <-watcher.ResultCh
 		if ev == nil {
 			svc.log.Printf("bank/paratime: failed to wait for event: %v", watcher.Context.Err())
+			svc.metrics.Requests.WithLabelValues(reqParatimeName, "failure").Inc()
 			return
 		}
 
@@ -135,6 +154,7 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 				ev.Error.Module,
 				ev.Error.Code,
 			)
+			svc.metrics.Requests.WithLabelValues(reqParatimeName, "failure").Inc()
 			return
 		}
 
@@ -142,6 +162,10 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 			depositBody.To.String(),
 			depositBody.Amount.String(),
 		)
+
+		elapsed = time.Since(start)
+		svc.metrics.RequestLatencies.WithLabelValues(reqParatimeName).Observe(elapsed.Seconds())
+		svc.metrics.Requests.WithLabelValues(reqParatimeName, "success").Inc()
 	}()
 }
 
@@ -163,6 +187,8 @@ func (svc *Service) RefillAllowances(ctx context.Context, conn connection.Connec
 	for ptName, pt := range svc.network.ParaTimes.All {
 		ptAddr := staking.NewRuntimeAddress(pt.Namespace())
 		allowance := consensusAccount.General.Allowances[ptAddr]
+
+		svc.metrics.Balances.WithLabelValues(ptName).Set(float64(allowance.ToBigInt().Uint64()))
 
 		svc.log.Printf("refill: %v allowance: %v", ptName, allowance)
 
