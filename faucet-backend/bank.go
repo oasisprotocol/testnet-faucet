@@ -110,7 +110,7 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 
 	var elapsed time.Duration
 	start := time.Now()
-	var reqParatimeName string
+	reqParatimeName := "unknown"
 	for ptName, pt := range svc.network.ParaTimes.All {
 		if req.ParaTime.ID == pt.ID {
 			reqParatimeName = ptName
