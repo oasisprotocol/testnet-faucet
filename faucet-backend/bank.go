@@ -188,6 +188,7 @@ func (svc *Service) RefillAllowances(ctx context.Context, conn connection.Connec
 		svc.log.Printf("bank: failed to query funding account: %v", err)
 		return
 	}
+	svc.metrics.Balances.WithLabelValues("consensus").Set(float64(consensusAccount.General.Balance.ToBigInt().Uint64()))
 
 	for ptName, pt := range svc.network.ParaTimes.All {
 		ptAddr := staking.NewRuntimeAddress(pt.Namespace())

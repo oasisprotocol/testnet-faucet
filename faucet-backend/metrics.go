@@ -17,7 +17,7 @@ var (
 	requestLatencyLabels = []string{"endpoint"}
 
 	// Labels to use for partitioning balances.
-	balanceLabels = []string{"paratime"}
+	balanceLabels = []string{"network"}
 )
 
 type FaucetMetrics struct {
