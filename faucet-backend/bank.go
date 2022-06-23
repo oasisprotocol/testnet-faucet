@@ -14,6 +14,12 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 )
 
+// From https://pkg.go.dev/github.com/oasisprotocol/oasis-sdk/client-sdk/go@v0.2.0/config#pkg-variables
+var paratimeIdToName = map[string]string{
+	"0000000000000000000000000000000000000000000000000000000000000000": "cipher",
+	"00000000000000000000000000000000000000000000000072c8215e60d5bca7": "emerald",
+}
+
 type FundRequest struct {
 	ParaTime *config.ParaTime
 	Account  *types.Address
@@ -110,11 +116,10 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 
 	var elapsed time.Duration
 	start := time.Now()
-	reqParatimeName := "unknown"
-	for ptName, pt := range svc.network.ParaTimes.All {
-		if req.ParaTime.ID == pt.ID {
-			reqParatimeName = ptName
-		}
+	reqParatimeName, ok := paratimeIdToName[req.ParaTime.ID]
+	if !ok {
+		svc.log.Printf("bank/paratime: unknown paratime id")
+		reqParatimeName = "unknown"
 	}
 
 	// Just asssume that there is sufficient allowance, and that the periodic
