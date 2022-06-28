@@ -9,6 +9,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const defaultMetricsPullAddr = "0.0.0.0:7000"
+
 var (
 	// Labels to use for partitioning requests.
 	requestLabels = []string{"endpoint", "status"}
@@ -63,11 +65,9 @@ func NewDefaultFaucetMetrics() *FaucetMetrics {
 
 func (svc *Service) MetricsWorker() {
 	svc.log.Printf("metrics: started")
-	var addr string
-	if svc.cfg.MetricsPullAddr == "" {
-		addr = "0.0.0.0:7000"
-	} else {
-		addr = svc.cfg.MetricsPullAddr
+	addr := svc.cfg.MetricsPullAddr
+	if addr == "" {
+		addr = defaultMetricsPullAddr
 	}
 
 	metricsServer := &http.Server{

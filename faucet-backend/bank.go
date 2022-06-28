@@ -20,6 +20,21 @@ var paratimeIdToName = map[string]string{
 	"00000000000000000000000000000000000000000000000072c8215e60d5bca7": "emerald",
 }
 
+// Returns the name of the paratime corresponding to paratimeId.
+func (svc *Service) paratimeName(paratimeId string) string {
+	for name, paratime := range svc.network.ParaTimes.All {
+		if paratimeId == paratime.ID {
+			return name
+		}
+	}
+	// Should never happen since the input has been validated
+	// by the frontend.
+	svc.log.Printf("bank/paratime: unknown paratime id %s",
+		paratimeId,
+	)
+	return "unknown_paratime"
+}
+
 type FundRequest struct {
 	ParaTime *config.ParaTime
 	Account  *types.Address
@@ -116,11 +131,7 @@ func (svc *Service) FundParaTimeRequest(ctx context.Context, conn connection.Con
 
 	var elapsed time.Duration
 	start := time.Now()
-	reqParatimeName, ok := paratimeIdToName[req.ParaTime.ID]
-	if !ok {
-		svc.log.Printf("bank/paratime: unknown paratime id")
-		reqParatimeName = "unknown"
-	}
+	reqParatimeName := svc.paratimeName(req.ParaTime.ID)
 
 	// Just asssume that there is sufficient allowance, and that the periodic
 	// refill adequately handles keeping the allowance topped off.
