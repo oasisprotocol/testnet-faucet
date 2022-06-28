@@ -14,12 +14,6 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 )
 
-// From https://pkg.go.dev/github.com/oasisprotocol/oasis-sdk/client-sdk/go@v0.2.0/config#pkg-variables
-var paratimeIdToName = map[string]string{
-	"0000000000000000000000000000000000000000000000000000000000000000": "cipher",
-	"00000000000000000000000000000000000000000000000072c8215e60d5bca7": "emerald",
-}
-
 // Returns the name of the paratime corresponding to paratimeId.
 func (svc *Service) paratimeName(paratimeId string) string {
 	for name, paratime := range svc.network.ParaTimes.All {
