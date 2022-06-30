@@ -18,6 +18,9 @@ type Config struct {
 	// DisableLogToFile disables logging to a file
 	DisableLogToFile bool `toml:"disable_log_to_file"`
 
+	// MetricsPullAddr is the address at which to serve prometheus metrics.
+	MetricsPullAddr string `toml:"metrics_addr"`
+
 	// TargetAllowance is the target per-paratime allowance in base units.
 	TargetAllowance quantity.Quantity `toml:"target_allowance"`
 	// MaxConsensusFundAmount is the maximum amount of tokens funded to
