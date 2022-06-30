@@ -22,6 +22,9 @@ web_root = ""
 # listen_addr is the faucet RESTful API endpoint address.
 listen_addr = ":8080"
 
+# metrics_addr is the address at which to serve prometheus metrics.
+metrics_addr = ":7000"
+
 # tls_cert_file is the TLS certificate file.
 tls_cert_file = ""
 

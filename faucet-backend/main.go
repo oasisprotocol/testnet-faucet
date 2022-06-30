@@ -33,7 +33,8 @@ type Service struct {
 	address staking.Address
 	signer  signature.Signer
 
-	log *log.Logger
+	log     *log.Logger
+	metrics *FaucetMetrics
 
 	readyCh chan struct{}
 	quitCh  chan struct{}
@@ -86,6 +87,7 @@ func NewService(cfg *Config) (*Service, error) {
 		address:       staking.NewAddress(signer.Public()),
 		signer:        signer,
 		log:           log.New(logWriter, "", log.LstdFlags),
+		metrics:       NewDefaultFaucetMetrics(),
 		readyCh:       make(chan struct{}),
 		quitCh:        make(chan struct{}),
 		doneCh:        make(chan struct{}),
@@ -113,6 +115,7 @@ func main() {
 
 	go svc.BankWorker()
 	go svc.FrontendWorker()
+	go svc.MetricsWorker()
 
 	<-svc.doneCh
 }
