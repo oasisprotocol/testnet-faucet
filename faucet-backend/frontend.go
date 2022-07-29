@@ -22,9 +22,10 @@ const (
 )
 
 var accountPrefixes = map[string]string{
-	"":        "oasis",
-	"emerald": "0x",
-	"cipher":  "oasis",
+	"":         "oasis",
+	"emerald":  "0x",
+	"cipher":   "oasis",
+	"sapphire": "0x",
 }
 
 func expectedAccountPrefix(paraTimeStr string) (string, error) {

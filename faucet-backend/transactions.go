@@ -112,6 +112,7 @@ func (svc *Service) SignAndSubmitMetaTx(
 		ctx,
 		client.RoundLatest,
 		tx,
+		false,
 	)
 	if err != nil {
 		svc.log.Printf("tx/meta: failed to estimate gas: %v", err)
