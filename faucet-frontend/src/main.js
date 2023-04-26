@@ -9,6 +9,20 @@ function showLoading(bool) {
   document.querySelector('#request-form-submit').disabled = bool;
 }
 
+/** Support /?paratime=sapphire */
+function preselectParatimeFromURL() {
+  const paratimeInUrl = new URL(window.location.href).searchParams.get('paratime');
+  const paratimeSelect =
+      /** @type {HTMLSelectElement} */
+      (document.querySelector('#paratime'));
+
+  for (const option of paratimeSelect.options) {
+    if (option.value === paratimeInUrl) {
+      option.selected = true;
+    }
+  }
+}
+
 document.querySelector('#request-form').addEventListener('submit', (event) => {
   try {
     showLoading(true);
@@ -43,3 +57,4 @@ document.querySelector('#request-form').addEventListener('submit', (event) => {
   }
 });
 
+preselectParatimeFromURL();
