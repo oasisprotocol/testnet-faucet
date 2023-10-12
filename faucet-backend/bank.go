@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	ethCommon "github.com/ethereum/go-ethereum/common"
+
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	consensusTx "github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
@@ -32,6 +34,7 @@ func (svc *Service) paratimeName(paratimeId string) string {
 type FundRequest struct {
 	ParaTime *config.ParaTime
 	Account  *types.Address
+    EthAccount *ethCommon.Address
 
 	ConsensusAmount *types.Quantity
 	ParaTimeAmount  *types.BaseUnits
