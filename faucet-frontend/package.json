@@ -15,8 +15,8 @@
     "muicss": "^0.10.3"
   },
   "devDependencies": {
-    "@parcel/transformer-pug": "^2.2.1",
-    "@parcel/transformer-sass": "^2.2.1",
-    "parcel": "^2.2.1"
+    "@parcel/transformer-pug": "^2.10.0",
+    "@parcel/transformer-sass": "^2.10.0",
+    "parcel": "^2.10.0"
   }
 }
