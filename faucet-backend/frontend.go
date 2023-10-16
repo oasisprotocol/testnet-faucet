@@ -191,7 +191,7 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		)
 		return
 	}
-	if fundReq.Account, err = helpers.ResolveAddress(svc.network, accountStr); err != nil {
+	if fundReq.Account, fundReq.EthAccount, err = helpers.ResolveAddress(svc.network, accountStr); err != nil {
 		svc.log.Printf("frontend: invalid account '%v': %v", accountStr, err)
 		writeResult(
 			http.StatusInternalServerError,

@@ -1,4 +1,4 @@
-FROM golang:1.17 as backend_builder
+FROM golang:1.20 as backend_builder
 
 WORKDIR /usr/src/app
 
@@ -6,7 +6,7 @@ COPY faucet-backend/ /usr/src/app
 
 RUN go build .
 
-FROM node:16
+FROM node:20
 
 COPY faucet-frontend/ /oasis/frontend
 RUN cd /oasis/frontend && \

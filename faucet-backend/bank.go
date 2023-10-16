@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	ethCommon "github.com/ethereum/go-ethereum/common"
+
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	consensusTx "github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
@@ -32,6 +34,7 @@ func (svc *Service) paratimeName(paratimeId string) string {
 type FundRequest struct {
 	ParaTime *config.ParaTime
 	Account  *types.Address
+	EthAccount *ethCommon.Address
 
 	ConsensusAmount *types.Quantity
 	ParaTimeAmount  *types.BaseUnits
@@ -49,12 +52,20 @@ func (svc *Service) BankWorker() {
 	)
 	for {
 		svc.log.Printf("bank: attempting to connect to gRPC endpoint")
-		if conn, err = connection.Connect(ctx, svc.network); err != nil {
+        // XXX: Revert to Connect() when oasis-sdk updates to be compatible with oasis-core v23
+		if conn, err = connection.ConnectNoVerify(ctx, svc.network); err != nil {
 			svc.log.Printf("bank: failed to connect to node: %v", err)
 			time.Sleep(15 * time.Second)
 			continue
 		}
 		break
+	}
+
+	cs := conn.Consensus()
+	chainContext, err := cs.GetChainContext(ctx)
+	svc.network.ChainContext = chainContext
+	if err != nil {
+		svc.log.Printf("bank: failed to retrieve remote node's chain context: %s", err)
 	}
 
 	// Refill the allowances.
