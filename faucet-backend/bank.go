@@ -52,7 +52,7 @@ func (svc *Service) BankWorker() {
 	)
 	for {
 		svc.log.Printf("bank: attempting to connect to gRPC endpoint")
-        // XXX: Revert to Connect() when oasis-sdk updates to be compatible with oasis-core v23
+		// XXX: Revert to Connect() when oasis-sdk updates to be compatible with oasis-core v23
 		if conn, err = connection.ConnectNoVerify(ctx, svc.network); err != nil {
 			svc.log.Printf("bank: failed to connect to node: %v", err)
 			time.Sleep(15 * time.Second)

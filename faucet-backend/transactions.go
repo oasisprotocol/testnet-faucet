@@ -119,7 +119,7 @@ func (svc *Service) SignAndSubmitMetaTx(
 		return nil, fmt.Errorf("failed to estimate gas")
 	}
 
-    chainContext, err := conn.Consensus().GetChainContext(ctx)
+	chainContext, err := conn.Consensus().GetChainContext(ctx)
 	if err != nil {
 		svc.log.Printf("tx/meta: failed to get ChainContext: %v", err)
 		return nil, fmt.Errorf("failed to get ChainContext")
@@ -127,10 +127,10 @@ func (svc *Service) SignAndSubmitMetaTx(
 
 	// Sign the transaction.
 	sigCtx := &signature.RichContext{
-        RuntimeID:    pt.Namespace(),
-        ChainContext: chainContext,
-        Base:         types.SignatureContextBase,
-    }
+		RuntimeID:    pt.Namespace(),
+		ChainContext: chainContext,
+		Base:         types.SignatureContextBase,
+	}
 	ts := tx.PrepareForSigning()
 	if err := ts.AppendSign(signature.Context(sigCtx), ed25519.WrapSigner(svc.signer)); err != nil {
 		svc.log.Printf("tx/meta: failed to sign transaction: %v", err)
