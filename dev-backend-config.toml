@@ -33,7 +33,7 @@ tls_key_file = ""
 
 # ReaptchaSharedSecret the reCAPTCHA V2 API shared secret for
 # use in bot prevention.
-recaptcha_shared_secret = "asdf" # dev only
+recaptcha_shared_secret = "" # dev only
 
 # verbose_logging enables potentially spammy verbose logging.
 verbose_logging = true
