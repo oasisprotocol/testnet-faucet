@@ -2,7 +2,7 @@
 // https://www.muicss.com/docs/v1/css-js/customization
 @import '../node_modules/muicss/lib/sass/mui/colors';
 
-$oasis-primary: #0092F6;
+$oasis-primary: #0500e2;
 $mui-primary-color: $oasis-primary;
 
 $mui-panel-padding: 0px;
@@ -70,8 +70,8 @@ body {
 /* Misc */
 .card-image {
   background:
-    url('./public/oasis-foundation.svg') center / auto 70px no-repeat,
-    url('./public/background.svg') top left / cover no-repeat,
+    url('./public/Network White.svg') center / auto 45px no-repeat,
+    url('./public/background.png') top left / cover no-repeat,
     $oasis-primary;
 }
 
