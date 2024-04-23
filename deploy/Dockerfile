@@ -1,4 +1,4 @@
-FROM golang:1.20 as backend_builder
+FROM golang:1.22 as backend_builder
 
 WORKDIR /usr/src/app
 
