@@ -1,0 +1,75 @@
+name: docker
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    name: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Determine tag name
+        id: determine_tag
+        shell: bash
+        run: |
+          if [[ -z "${GITHUB_BASE_REF}" ]]; then
+            # On master/stable branches.
+            branch=${GITHUB_REF#refs/heads/}
+          else
+            # On pull request branches.
+            branch=pr-$(git describe --always --abbrev=7)
+          fi
+          tag=${branch//\//-}
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
+          echo "created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Rebuild ghcr.io/oasisprotocol/testnet-faucet:${{ steps.determine_tag.outputs.tag }}"
+        uses: docker/build-push-action@v6
+        with:
+          file: deploy/Dockerfile
+          tags: ghcr.io/oasisprotocol/testnet-faucet:${{ steps.determine_tag.outputs.tag }}
+          pull: true
+          push: true
+          provenance: false
+          labels: |
+            org.opencontainers.image.authors=${{ github.actor }}
+            org.opencontainers.image.description=Testnet Faucet Docker image
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.organization=${{ github.repository_owner }}
+            org.opencontainers.image.created=${{ steps.determine_tag.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Prune old ghcr.io/oasisprotocol/testnet-faucet images
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: oasisprotocol
+          container: testnet-faucet
+          keep-younger-than: 7 # days
+          keep-last: 2
+          prune-untagged: true
+          prune-tags-regexes: ^pr-

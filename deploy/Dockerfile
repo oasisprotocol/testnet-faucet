@@ -8,10 +8,11 @@ RUN go build .
 
 FROM node:20
 
+WORKDIR /oasis/frontend
+
 COPY faucet-frontend/ /oasis/frontend
-RUN cd /oasis/frontend && \
-    yarn
+
+RUN yarn
 
 COPY deploy/frontend-serve.sh /oasis/bin/frontend-serve.sh
 COPY --from=backend_builder /usr/src/app/faucet-backend /oasis/bin/faucet-backend
-
