@@ -26,15 +26,15 @@ jobs:
         id: determine_tag
         shell: bash
         run: |
-          if [[ -z $GITHUB_BASE_REF ]]; then
+          if [[ -z "${GITHUB_BASE_REF}" ]]; then
             # On master/stable branches.
             branch=${GITHUB_REF#refs/heads/}
           else
             # On pull request branches.
-            branch=pr-$(git describe --always --match '' --abbrev=7)
+            branch=pr-$(git describe --always --abbrev=7)
           fi
-          branch=${branch//\//-}
-          echo "tag=${branch}" >> $GITHUB_OUTPUT
+          tag=${branch//\//-}
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
           echo "created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
