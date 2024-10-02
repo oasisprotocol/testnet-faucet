@@ -12,6 +12,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  packages: write
+  contents: read
+
 jobs:
   build-and-push:
     name: build-and-push
