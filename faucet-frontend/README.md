@@ -16,6 +16,10 @@ edit faucet-backend.toml
 (cd ../faucet-backend && go1.17.6 build && ./faucet-backend)
 
 open http://localhost:8080/
+
+
+# run frontend only:
+yarn dev-frontend-only
 ```
 
 
