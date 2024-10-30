@@ -1,9 +1,15 @@
 // @ts-check
 
-function showResponseStatus(status) {
+function showResponseStatus(error, status, requestBody) {
   document.querySelector('#request-form').style.display = 'none';
   document.querySelector('#response-display').style.display = 'block';
-  document.querySelector('#response-display-text').textContent = status;
+  if (error) {
+    document.querySelector('#response-display-text').textContent = error;
+  } else {
+    document.querySelector('#response-display-text').textContent = status;
+    if (requestBody.get('paratime') === 'emerald') {}
+    if (requestBody.get('paratime') === 'sapphire') {}
+  }
 }
 function showLoading(bool) {
   document.querySelector('#request-form-submit').disabled = bool;
@@ -31,10 +37,11 @@ document.querySelector('#request-form').addEventListener('submit', (event) => {
       /** @type {HTMLFormElement} */
       (event.currentTarget);
     const url = form.action;
+    const requestBody = new URLSearchParams(new FormData(form))
 
     fetch(url, {
       method: 'POST',
-      body: new URLSearchParams(new FormData(form)),
+      body: requestBody,
       headers: {
         Accept: 'application/json',
       },
@@ -42,10 +49,10 @@ document.querySelector('#request-form').addEventListener('submit', (event) => {
       .then(response => response.json())
       .then((responseJson) => {
         showLoading(false);
-        showResponseStatus(responseJson.result);
+        showResponseStatus(null, responseJson.result, requestBody);
       }, (error) => {
         showLoading(false);
-        showResponseStatus(error);
+        showResponseStatus(error, null, requestBody);
       });
 
     // Only prevent native form POST if no errors were thrown until `fetch`
