@@ -51,5 +51,11 @@ html(lang="en")
 
           form#response-display(action="/" method="GET" style={display: 'none'})
             p#response-display-text
-            button.mui-btn.mui-btn--primary(type="submit")
+            button#start-again-button.mui-btn.mui-btn--primary(type="submit")
               | Start again
+            
+            button#add-sapphire-button.mui-btn.mui-btn--primary(type="button" style="display: none;")
+              | Add Sapphire to Metamask
+
+            button#add-emerald-button.mui-btn.mui-btn--primary(type="button" style="display: none;")
+              | Add Emerald to Metamask
