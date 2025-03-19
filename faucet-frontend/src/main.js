@@ -3,10 +3,13 @@
 function showResponseStatus(error, status, requestBody) {
   document.querySelector('#request-form').style.display = 'none';
   document.querySelector('#response-display').style.display = 'block';
+  document.querySelector('#response-display-text').style.textAlign = 'center';
   if (error) {
     document.querySelector('#response-display-text').textContent = error;
+    document.querySelector('#response-display-text').style.color = '#d1001f';
   } else {
     document.querySelector('#response-display-text').textContent = status;
+    document.querySelector('#response-display-text').style.color = '#4BB543';
     if (requestBody.get('paratime') === 'emerald') {}
     if (requestBody.get('paratime') === 'sapphire') {}
   }
