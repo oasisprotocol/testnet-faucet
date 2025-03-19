@@ -21,19 +21,26 @@ const (
 	queryRecaptchaResponse = "g-recaptcha-response"
 )
 
-var accountPrefixes = map[string]string{
-	"":         "oasis",
-	"emerald":  "0x",
-	"cipher":   "oasis",
-	"sapphire": "0x",
+var accountPrefixes = map[string][]string{
+	"":         []string{"oasis"}, // Consensus.
+	"emerald":  []string{"0x"},
+	"cipher":   []string{"oasis"},
+	"sapphire": []string{"0x", "oasis"},
 }
 
-func expectedAccountPrefix(paraTimeStr string) (string, error) {
-	prefix, ok := accountPrefixes[strings.ToLower(paraTimeStr)]
+// isValidAccountPrefixForParaTime checks if the given account address string has a valid
+// prefix for use with the given paratime name based on the accountPrefixes map.
+func isValidAccountPrefixForParaTime(paraTimeStr string, accountStr string) (bool, error) {
+	prefixes, ok := accountPrefixes[strings.ToLower(paraTimeStr)]
 	if !ok {
-		return "", fmt.Errorf("frontend: unknown account type")
+		return false, fmt.Errorf("frontend: unknown paratime type")
 	}
-	return prefix, nil
+	for _, p := range prefixes {
+		if strings.HasPrefix(accountStr, p) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (svc *Service) TestAndSetAddress(addr *types.Address) bool {
@@ -154,7 +161,8 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 	// ParaTime/Account
 	paraTimeStr := strings.TrimSpace(req.Form.Get(queryParaTime))
 	accountStr := strings.TrimSpace(req.Form.Get(queryAccount))
-	prefixStr, err := expectedAccountPrefix(paraTimeStr)
+
+	prefixValid, err := isValidAccountPrefixForParaTime(paraTimeStr, accountStr)
 	if err != nil {
 		svc.log.Printf("frontend: invalid paratime: '%v'", paraTimeStr)
 		writeResult(
@@ -163,6 +171,7 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		)
 		return
 	}
+
 	if paraTimeStr != "" {
 		// Paratime account
 		fundReq.ParaTime = svc.network.ParaTimes.All[paraTimeStr]
@@ -174,7 +183,7 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 			)
 			return
 		}
-		if !strings.HasPrefix(accountStr, prefixStr) {
+		if !prefixValid {
 			svc.log.Printf("frontend: account not a paratime address: '%v'", accountStr)
 			writeResult(
 				http.StatusInternalServerError,
@@ -182,7 +191,7 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 			)
 			return
 		}
-	} else if !strings.HasPrefix(accountStr, prefixStr) {
+	} else if !prefixValid {
 		// Consensus account
 		svc.log.Printf("frontend: account not an oasis address: '%v'", accountStr)
 		writeResult(
@@ -191,6 +200,7 @@ func (svc *Service) OnFundRequest(w http.ResponseWriter, req *http.Request) {
 		)
 		return
 	}
+
 	if fundReq.Account, fundReq.EthAccount, err = helpers.ResolveEthOrOasisAddress(accountStr); err != nil {
 		svc.log.Printf("frontend: invalid account '%v': %v", accountStr, err)
 		writeResult(
