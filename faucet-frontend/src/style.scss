@@ -95,6 +95,10 @@ body {
   }
 }
 
+.mui-btn + .mui-btn {
+  margin-left: 0;
+}
+
 /* Spinner */
 .spinner {
   display: inline-block;
