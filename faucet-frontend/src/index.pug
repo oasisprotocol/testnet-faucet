@@ -13,9 +13,23 @@ html(lang="en")
 
     link(rel="stylesheet" href="./style.scss")
     script(src="https://www.google.com/recaptcha/api.js" defer)
-    script(src="./main.js" defer)
+    script(src="./main.js" defer type="module")
 
   body.page
+    a#is_drained.mui-btn.mui-btn--danger(
+      role="alert"
+      style="display: none; box-sizing: border-box; text-transform: none;"
+      href="https://explorer.oasis.io/testnet/consensus/address/oasis1qzna6nq9kuktjmxx2s84z38eysqyts84jc9lgdg2"
+    )
+      | Faucet balance is too low to fund your account. Please try again later or contact us!
+
+    a#is_almost_drained.mui-btn(
+      role="alert"
+      style="display: none; box-sizing: border-box; text-transform: none;"
+      href="https://explorer.oasis.io/testnet/consensus/address/oasis1qzna6nq9kuktjmxx2s84z38eysqyts84jc9lgdg2"
+    )
+      | Faucet balance is low. Funding your account may fail!
+
     main.align-card
       section.mui-panel.card
         div.card-image(role="img" aria-label="Oasis Foundation logo")

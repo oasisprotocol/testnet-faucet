@@ -10,6 +10,8 @@ function $() {
     request_form: /** @type {HTMLElement} */ (document.querySelector('#request_form')),
     request_form_submit: /** @type {HTMLButtonElement} */ (document.querySelector('#request_form_submit')),
     paratime: /** @type {HTMLSelectElement} */ (document.querySelector('#paratime')),
+    is_drained: /** @type {HTMLButtonElement} */ (document.querySelector('#is_drained')),
+    is_almost_drained: /** @type {HTMLButtonElement} */ (document.querySelector('#is_almost_drained')),
   }
 }
 
@@ -155,3 +157,14 @@ $().add_emerald_button.addEventListener('click', () => {
         alert('The Oasis Emerald Testnet RPC already added.');
     });
 });
+
+async function checkFaucetBalance() {
+  const acc = await (await fetch('https://testnet.nexus.oasis.io/v1/consensus/accounts/oasis1qzna6nq9kuktjmxx2s84z38eysqyts84jc9lgdg2')).json()
+  if (BigInt(acc.available) < BigInt(process.env.REQUEST_AMOUNT) * BigInt('1000000000')) {
+    $().is_drained.style.display = 'block'
+  } else if (BigInt(acc.available) < BigInt(process.env.REQUEST_AMOUNT) * BigInt('1000000000') * BigInt('20')) {
+    $().is_almost_drained.style.display = 'block'
+  }
+}
+
+checkFaucetBalance()
