@@ -1,43 +1,53 @@
 // @ts-check
 
+function $() {
+  return {
+    response_display: /** @type {HTMLElement} */ (document.querySelector('#response_display')),
+    response_display_text: /** @type {HTMLElement} */ (document.querySelector('#response_display_text')),
+    start_again_button: /** @type {HTMLButtonElement} */ (document.querySelector('#start_again_button')),
+    add_emerald_button: /** @type {HTMLButtonElement} */ (document.querySelector('#add_emerald_button')),
+    add_sapphire_button: /** @type {HTMLButtonElement} */ (document.querySelector('#add_sapphire_button')),
+    request_form: /** @type {HTMLElement} */ (document.querySelector('#request_form')),
+    request_form_submit: /** @type {HTMLButtonElement} */ (document.querySelector('#request_form_submit')),
+    paratime: /** @type {HTMLSelectElement} */ (document.querySelector('#paratime')),
+  }
+}
+
+
 function showResponseStatus(error, status, requestBody) {
-  document.querySelector('#request-form').style.display = 'none';
-  document.querySelector('#response-display').style.display = 'block';
-  document.querySelector('#response-display-text').style.textAlign = 'center';
+  $().request_form.style.display = 'none';
+  $().response_display.style.display = 'block';
+  $().response_display_text.style.textAlign = 'center';
   if (error) {
-    document.querySelector('#response-display-text').textContent = error;
-    document.querySelector('#response-display-text').style.color = '#d1001f';
+    $().response_display_text.textContent = error;
+    $().response_display_text.style.color = '#d1001f';
   } else {
-    document.querySelector('#response-display-text').textContent = status;
-    document.querySelector('#response-display-text').style.color = '#4BB543';
-    document.querySelector('#start-again-button').textContent = 'Request More Tokens';
+    $().response_display_text.textContent = status;
+    $().response_display_text.style.color = '#4BB543';
+    $().start_again_button.textContent = 'Request More Tokens';
     if (requestBody.get('paratime') === 'emerald') {
-      document.querySelector('#add-emerald-button').style.display = 'block';
+      $().add_emerald_button.style.display = 'block';
     }
     if (requestBody.get('paratime') === 'sapphire') {
-      document.querySelector('#add-sapphire-button').style.display = 'block';
+      $().add_sapphire_button.style.display = 'block';
     }
   }
 }
 function showLoading(bool) {
-  document.querySelector('#request-form-submit').disabled = bool;
+  $().request_form_submit.disabled = bool;
 }
 
 /** Support /?paratime=sapphire */
 function preselectParatimeFromURL() {
   const paratimeInUrl = new URL(window.location.href).searchParams.get('paratime');
-  const paratimeSelect =
-      /** @type {HTMLSelectElement} */
-      (document.querySelector('#paratime'));
-
-  for (const option of paratimeSelect.options) {
+  for (const option of $().paratime.options) {
     if (option.value === paratimeInUrl) {
       option.selected = true;
     }
   }
 }
 
-document.querySelector('#request-form').addEventListener('submit', (event) => {
+$().request_form.addEventListener('submit', (event) => {
   try {
     showLoading(true);
 
@@ -75,7 +85,7 @@ document.querySelector('#request-form').addEventListener('submit', (event) => {
 preselectParatimeFromURL();
 
 // Add Sapphire to MetaMask
-document.querySelector('#add-sapphire-button').addEventListener('click', () => {
+$().add_sapphire_button.addEventListener('click', () => {
   if (!window.ethereum?.request) {
     return alert(
       'Have you installed MetaMask yet? If not, please do so.\n\nComputer: Once it is installed, you will be able to add the Sapphire ParaTime to your MetaMask.\n\nPhone: Open the website through your MetaMask Browser to add the Sapphire ParaTime.'
@@ -111,7 +121,7 @@ document.querySelector('#add-sapphire-button').addEventListener('click', () => {
 });
 
 // Add Emerald to MetaMask
-document.querySelector('#add-emerald-button').addEventListener('click', () => {
+$().add_emerald_button.addEventListener('click', () => {
   if (!window.ethereum?.request) {
     return alert(
       'Have you installed MetaMask yet? If not, please do so.\n\nComputer: Once it is installed, you will be able to add the Emerald ParaTime to your MetaMask.\n\nPhone: Open the website through your MetaMask Browser to add the Emerald ParaTime.'
