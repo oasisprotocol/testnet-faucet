@@ -13,16 +13,30 @@ html(lang="en")
 
     link(rel="stylesheet" href="./style.scss")
     script(src="https://www.google.com/recaptcha/api.js" defer)
-    script(src="./main.js" defer)
+    script(src="./main.js" defer type="module")
 
   body.page
+    a#is_drained.mui-btn.mui-btn--danger(
+      role="alert"
+      style="display: none; box-sizing: border-box; text-transform: none;"
+      href="https://explorer.oasis.io/testnet/consensus/address/oasis1qzna6nq9kuktjmxx2s84z38eysqyts84jc9lgdg2"
+    )
+      | Faucet balance is too low to fund your account. Please try again later or contact us!
+
+    a#is_almost_drained.mui-btn(
+      role="alert"
+      style="display: none; box-sizing: border-box; text-transform: none;"
+      href="https://explorer.oasis.io/testnet/consensus/address/oasis1qzna6nq9kuktjmxx2s84z38eysqyts84jc9lgdg2"
+    )
+      | Faucet balance is low. Funding your account may fail!
+
     main.align-card
       section.mui-panel.card
         div.card-image(role="img" aria-label="Oasis Foundation logo")
         div.card-content
           h1.title #{process.env.CARD_TITLE}
 
-          form#request-form(action="/api/v1/fund" method="POST")
+          form#request_form(action="/api/v1/fund" method="POST")
             p.mui--text-center.mui--text-dark-secondary
               | Drops are limited to
               |
@@ -43,19 +57,19 @@ html(lang="en")
 
             div(class="g-recaptcha" data-sitekey=process.env.CAPTCHA_SITE_KEY)
 
-            button#request-form-submit.mui-btn.mui-btn--primary(type="submit")
+            button#request_form_submit.mui-btn.mui-btn--primary(type="submit")
               | Request Test Tokens
               |
               span.spinner-when-disabled
                 div.spinner
 
-          form#response-display(action="/" method="GET" style={display: 'none'})
-            p#response-display-text
-            button#start-again-button.mui-btn.mui-btn--primary(type="submit")
+          form#response_display(action="/" method="GET" style={display: 'none'})
+            p#response_display_text
+            button#start_again_button.mui-btn.mui-btn--primary(type="submit")
               | Start again
-            
-            button#add-sapphire-button.mui-btn.mui-btn--primary(type="button" style="display: none;")
+
+            button#add_sapphire_button.mui-btn.mui-btn--primary(type="button" style="display: none;")
               | Add Sapphire to Metamask
 
-            button#add-emerald-button.mui-btn.mui-btn--primary(type="button" style="display: none;")
+            button#add_emerald_button.mui-btn.mui-btn--primary(type="button" style="display: none;")
               | Add Emerald to Metamask
