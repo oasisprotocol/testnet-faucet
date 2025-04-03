@@ -16,7 +16,12 @@ function $() {
 }
 
 
-function showResponseStatus(error, status, requestBody) {
+/**
+ * @param {null | string} error
+ * @param {null | string} success
+ * @param {URLSearchParams} requestBody
+ */
+function showResponseStatus(error, success, requestBody) {
   $().request_form.style.display = 'none';
   $().response_display.style.display = 'block';
   $().response_display_text.style.textAlign = 'center';
@@ -24,7 +29,7 @@ function showResponseStatus(error, status, requestBody) {
     $().response_display_text.textContent = error;
     $().response_display_text.style.color = '#d1001f';
   } else {
-    $().response_display_text.textContent = status;
+    $().response_display_text.textContent = success;
     $().response_display_text.style.color = '#4BB543';
     $().start_again_button.textContent = 'Request More Tokens';
     if (requestBody.get('paratime') === 'emerald') {
@@ -35,6 +40,7 @@ function showResponseStatus(error, status, requestBody) {
     }
   }
 }
+/** @param {boolean} bool */
 function showLoading(bool) {
   $().request_form_submit.disabled = bool;
 }
