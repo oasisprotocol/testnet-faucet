@@ -165,7 +165,8 @@ $().add_emerald_button.addEventListener('click', () => {
 });
 
 async function checkFaucetBalance() {
-  const acc = await (await fetch('https://testnet.nexus.oasis.io/v1/consensus/accounts/oasis1qzna6nq9kuktjmxx2s84z38eysqyts84jc9lgdg2')).json()
+  if (!process.env.FAUCET_BALANCE_API) return
+  const acc = await (await fetch(process.env.FAUCET_BALANCE_API)).json()
   if (BigInt(acc.available) < BigInt(process.env.REQUEST_AMOUNT) * BigInt('1000000000')) {
     $().is_drained.style.display = 'block'
   } else if (BigInt(acc.available) < BigInt(process.env.REQUEST_AMOUNT) * BigInt('1000000000') * BigInt('20')) {
