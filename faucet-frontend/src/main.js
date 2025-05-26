@@ -2,12 +2,12 @@
 
 function $() {
   return {
-    response_display: /** @type {HTMLElement} */ (document.querySelector('#response_display')),
-    response_display_text: /** @type {HTMLElement} */ (document.querySelector('#response_display_text')),
+    response_display: document.querySelector('#response_display'),
+    response_display_text: document.querySelector('#response_display_text'),
     start_again_button: /** @type {HTMLButtonElement} */ (document.querySelector('#start_again_button')),
     add_emerald_button: /** @type {HTMLButtonElement} */ (document.querySelector('#add_emerald_button')),
     add_sapphire_button: /** @type {HTMLButtonElement} */ (document.querySelector('#add_sapphire_button')),
-    request_form: /** @type {HTMLElement} */ (document.querySelector('#request_form')),
+    request_form: document.querySelector('#request_form'),
     request_form_submit: /** @type {HTMLButtonElement} */ (document.querySelector('#request_form_submit')),
     paratime: /** @type {HTMLSelectElement} */ (document.querySelector('#paratime')),
     is_drained: /** @type {HTMLButtonElement} */ (document.querySelector('#is_drained')),
