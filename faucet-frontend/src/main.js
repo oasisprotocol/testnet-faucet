@@ -1,5 +1,11 @@
 // @ts-check
 
+// Reload every 5 minutes (when captcha expires)
+// Although this loses user inputs it is better than losing inputs and failing after submit.
+setTimeout(function() {
+  window.location.reload();
+}, 5 * 60 * 1000);
+
 function $() {
   return {
     response_display: document.querySelector('#response_display'),
@@ -91,6 +97,18 @@ $().request_form.addEventListener('submit', (event) => {
 });
 
 preselectParatimeFromURL();
+
+// Sync paratime selection back to querystring
+$().paratime.addEventListener('change', () => {
+  const url = new URL(window.location.href);
+  const selectedValue = $().paratime.value;
+  if (selectedValue) {
+    url.searchParams.set('paratime', selectedValue);
+  } else {
+    url.searchParams.delete('paratime');
+  }
+  window.history.replaceState({}, '', url);
+});
 
 // Add Sapphire to MetaMask
 $().add_sapphire_button.addEventListener('click', () => {
