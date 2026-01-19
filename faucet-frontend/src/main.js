@@ -92,6 +92,18 @@ $().request_form.addEventListener('submit', (event) => {
 
 preselectParatimeFromURL();
 
+// Sync paratime selection back to querystring
+$().paratime.addEventListener('change', () => {
+  const url = new URL(window.location.href);
+  const selectedValue = $().paratime.value;
+  if (selectedValue) {
+    url.searchParams.set('paratime', selectedValue);
+  } else {
+    url.searchParams.delete('paratime');
+  }
+  window.history.replaceState({}, '', url);
+});
+
 // Add Sapphire to MetaMask
 $().add_sapphire_button.addEventListener('click', () => {
   if (!window.ethereum?.request) {
