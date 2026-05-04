@@ -16,6 +16,7 @@ function $() {
     request_form: document.querySelector('#request_form'),
     request_form_submit: /** @type {HTMLButtonElement} */ (document.querySelector('#request_form_submit')),
     paratime: /** @type {HTMLSelectElement} */ (document.querySelector('#paratime')),
+    account: /** @type {HTMLInputElement} */ (document.querySelector('#account')),
     is_drained: /** @type {HTMLButtonElement} */ (document.querySelector('#is_drained')),
     is_almost_drained: /** @type {HTMLButtonElement} */ (document.querySelector('#is_almost_drained')),
   }
@@ -61,6 +62,14 @@ function preselectParatimeFromURL() {
   }
 }
 
+/** Support /?account=<account_address> */
+function preselectWalletFromURL() {
+  const walletInUrl = new URL(window.location.href).searchParams.get('account');
+  if (walletInUrl) {
+    $().account.value = walletInUrl;
+  }
+}
+
 $().request_form.addEventListener('submit', (event) => {
   try {
     showLoading(true);
@@ -97,6 +106,7 @@ $().request_form.addEventListener('submit', (event) => {
 });
 
 preselectParatimeFromURL();
+preselectWalletFromURL();
 
 // Sync paratime selection back to querystring
 $().paratime.addEventListener('change', () => {
