@@ -57,7 +57,7 @@ jobs:
           file: deploy/Dockerfile
           tags: ghcr.io/oasisprotocol/testnet-faucet:${{ steps.determine_tag.outputs.tag }}
           pull: true
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           labels: |
             org.opencontainers.image.authors=${{ github.actor }}
@@ -68,6 +68,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Prune old ghcr.io/oasisprotocol/testnet-faucet images
+        if: github.event_name != 'pull_request'
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
