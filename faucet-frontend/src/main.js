@@ -111,11 +111,17 @@ preselectWalletFromURL();
 // Sync paratime selection back to querystring
 $().paratime.addEventListener('change', () => {
   const url = new URL(window.location.href);
-  const selectedValue = $().paratime.value;
-  if (selectedValue) {
-    url.searchParams.set('paratime', selectedValue);
+  const paratimeValue = $().paratime.value;
+  const accountValue = $().account.value;
+  if (paratimeValue) {
+    url.searchParams.set('paratime', paratimeValue);
   } else {
     url.searchParams.delete('paratime');
+  }
+  if (accountValue) {
+    url.searchParams.set('account', accountValue);
+  } else {
+    url.searchParams.delete('account');
   }
   window.history.replaceState({}, '', url);
 });
