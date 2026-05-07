@@ -8,6 +8,7 @@ import (
 	consensusSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	consensusTx "github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
+	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
@@ -41,15 +42,15 @@ func (svc *Service) SignAndSubmitConsensusTx(
 	// Query the current account nonce.  This in theory could be done once
 	// and just incremented, but the faucet probably won't have enough load
 	// to where this is a big deal.
-	nonce, err := conn.Consensus().GetSignerNonce(ctx, &consensus.GetSignerNonceRequest{
-		AccountAddress: svc.address,
-		Height:         consensus.HeightLatest,
+	account, err := conn.Consensus().Staking().Account(ctx, &staking.OwnerQuery{
+		Height: consensus.HeightLatest,
+		Owner:  svc.address,
 	})
 	if err != nil {
 		svc.log.Printf("tx/consensus: failed to query nonce: %v", err)
 		return fmt.Errorf("failed to query nonce")
 	}
-	tx.Nonce = nonce
+	tx.Nonce = account.General.Nonce
 
 	// Estimate gas.
 	gas, err := conn.Consensus().EstimateGas(ctx, &consensus.EstimateGasRequest{
